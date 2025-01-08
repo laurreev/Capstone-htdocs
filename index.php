@@ -18,19 +18,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $password = $_POST['password'];
 
     // Prepare and bind
-    $stmt = $conn->prepare("SELECT role FROM user WHERE username = ? AND password = ?");
-    $stmt->bind_param("ss", $username, $password);
+    $stmt = $conn->prepare("SELECT password, role FROM user WHERE username = ?");
+    $stmt->bind_param("s", $username);
     $stmt->execute();
-    $result = $stmt->get_result();
+    $stmt->store_result();
+    $stmt->bind_result($stored_password, $role);
+    $stmt->fetch();
 
-    if ($result->num_rows > 0) {
-        $row = $result->fetch_assoc();
+    if ($stmt->num_rows > 0 && $password === $stored_password) {
         $_SESSION['username'] = $username;
-        $_SESSION['role'] = $row['role'];
+        $_SESSION['role'] = $role;
 
-        if ($row['role'] == 0) {
+        if ($role == 0) {
             header('Location: adminhome.php');
-        } else if ($row['role'] == 1) {
+        } else if ($role == 1) {
             header('Location: farmerhome.php');
         }
         exit();
@@ -58,7 +59,7 @@ $conn->close();
         <?php if (isset($error)): ?>
             <p style="color: red;"><?php echo $error; ?></p>
         <?php endif; ?>
-        <form action="login.php" method="post">
+        <form action="index.php" method="post">
             <input type="text" name="username" placeholder="Username" required>
             <div class="password-container">
                 <input type="password" name="password" placeholder="Password" required>
@@ -66,7 +67,6 @@ $conn->close();
             </div>
             <button type="submit">Login</button>
         </form>
- <!--    <p>Start an account by signing up. <a href="/signup">Click Here</a></p> -->
     </div>
     <script>
         document.querySelector('.reveal-password').addEventListener('mouseover', function() {

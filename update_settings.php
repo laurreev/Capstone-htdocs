@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['username'])) {
-    header('Location: login.php');
+    header('Location: index.php');
     exit();
 }
 
@@ -24,7 +24,7 @@ $confirm_password = $_POST['confirm-password'];
 
 if ($password !== $confirm_password) {
     $_SESSION['error'] = "Passwords do not match.";
-    header('Location: adminhome.php?tab=settings');
+    header('Location: ' . ($_SESSION['role'] == 0 ? 'adminhome.php' : 'farmerhome.php') . '?tab=settings');
     exit();
 }
 
@@ -48,6 +48,6 @@ if ($stmt->execute()) {
 $stmt->close();
 $conn->close();
 
-header('Location: adminhome.php?tab=settings');
+header('Location: ' . ($_SESSION['role'] == 0 ? 'adminhome.php' : 'farmerhome.php') . '?tab=settings');
 exit();
 ?>
