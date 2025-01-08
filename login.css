@@ -4,13 +4,17 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #f0f0f0;
+    background-image: url('images/farm.jpeg'); /* Replace with the path to your farm image */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    margin: 0;
 }
 
 .login-container {
-    background-color: #fff;
+    background: rgba(255, 255, 255, .95); /* Semi-transparent background */
     padding: 20px;
-    border-radius: 5px;
+    border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     width: 300px;
     text-align: center;
@@ -57,4 +61,40 @@ body {
 
 .login-container a:hover {
     text-decoration: underline;
+}
+
+.password-container {
+    position: relative;
+    display: inline-block;
+    width: 100%; /* Ensure the container takes the full width */
+}
+
+.password-container input[type="password"],
+.password-container input[type="text"] {
+    width: calc(100% - 30px); /* Adjust width to account for the reveal icon */
+    box-sizing: border-box; /* Ensure padding and border are included in the element's total width and height */
+}
+
+.reveal-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    transition: opacity 0.3s;
+}
+
+.reveal-password:hover {
+    opacity: 0.5;
+}
+
+/* Ensure both input fields have the same styling */
+.login-container input[type="text"],
+.login-container input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-sizing: border-box; /* Ensure padding and border are included in the element's total width and height */
 }

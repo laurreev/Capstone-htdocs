@@ -18,14 +18,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $password = $_POST['password'];
 
     // Prepare and bind
-    $stmt = $conn->prepare("SELECT * FROM user WHERE username = ? AND password = ?");
+    $stmt = $conn->prepare("SELECT role FROM user WHERE username = ? AND password = ?");
     $stmt->bind_param("ss", $username, $password);
     $stmt->execute();
     $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
         $_SESSION['username'] = $username;
-        header('Location: adminhome.html');
+        $_SESSION['role'] = $row['role'];
+
+        if ($row['role'] == 0) {
+            header('Location: adminhome.php');
+        } else if ($row['role'] == 1) {
+            header('Location: farmerhome.php');
+        }
         exit();
     } else {
         $error = 'Invalid username or password';
@@ -53,10 +60,24 @@ $conn->close();
         <?php endif; ?>
         <form action="login.php" method="post">
             <input type="text" name="username" placeholder="Username" required>
-            <input type="password" name="password" placeholder="Password" required>
+            <div class="password-container">
+                <input type="password" name="password" placeholder="Password" required>
+                <span class="reveal-password">👁️</span>
+            </div>
             <button type="submit">Login</button>
         </form>
-        <p>Start an account by signing up. <a href="/signup">Click Here</a></p>
+ <!--    <p>Start an account by signing up. <a href="/signup">Click Here</a></p> -->
     </div>
+    <script>
+        document.querySelector('.reveal-password').addEventListener('mouseover', function() {
+            const passwordInput = document.querySelector('.password-container input[type="password"]');
+            passwordInput.type = 'text';
+        });
+
+        document.querySelector('.reveal-password').addEventListener('mouseout', function() {
+            const passwordInput = document.querySelector('.password-container input[type="text"]');
+            passwordInput.type = 'password';
+        });
+    </script>
 </body>
 </html>
