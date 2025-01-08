@@ -1,0 +1,134 @@
+body {
+    font-family: Arial, sans-serif;
+    background-image: url('images/farm.jpeg'); /* Replace with the path to your farm image */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    height: 100vh;
+    margin: 0;
+}
+
+.admin-nav {
+    background: #333;
+    color: #fff;
+    padding: 10px;
+    border-radius: 0 0 10px 10px;
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 1200px; /* Adjust as needed */
+    z-index: 1000;
+}
+
+.admin-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: space-around;
+}
+
+.admin-nav ul li {
+    display: inline;
+}
+
+.admin-nav ul li a {
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 20px;
+    display: inline-block;
+}
+
+.admin-nav ul li a:hover {
+    background: #575757;
+    border-radius: 5px;
+}
+
+.logout-button {
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 10px 20px;
+    text-decoration: none;
+}
+
+.logout-button:hover {
+    background: #575757;
+    border-radius: 5px;
+}
+
+.admin-container {
+    width: 80%;
+    margin: 100px auto 0; /* Adjust margin to account for fixed nav */
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+.farmer-nav {
+    background: #333;
+    color: #fff;
+    padding: 10px;
+    border-radius: 0 0 10px 10px;
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 1200px; /* Adjust as needed */
+    z-index: 1000;
+}
+
+.farmer-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: space-around;
+}
+
+.farmer-nav ul li {
+    display: inline;
+}
+
+.farmer-nav ul li a {
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 20px;
+    display: inline-block;
+}
+
+.farmer-nav ul li a:hover {
+    background: #575757;
+    border-radius: 5px;
+}
+
+.farmer-container {
+    width: 80%;
+    margin: 100px auto 0; /* Adjust margin to account for fixed nav */
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+.content-section {
+    display: none;
+}
+
+#dashboard {
+    display: block;
+}
+
+#calendar {
+    display: block;
+}
+
+#calendar-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
