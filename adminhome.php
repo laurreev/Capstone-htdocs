@@ -45,6 +45,16 @@ if ($result->num_rows > 0) {
 // Fetch total number of farmers
 $total_farmers_count = $male_farmers_count + $female_farmers_count;
 
+// Fetch messages from farmers
+$messages = [];
+$sql = "SELECT * FROM messages WHERE username IN (SELECT username FROM user WHERE role = 1)";
+$result = $conn->query($sql);
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $messages[] = $row;
+    }
+}
+
 $conn->close();
 ?>
 
@@ -64,9 +74,7 @@ $conn->close();
             <li><a href="#" data-content="reports">Reports</a></li>
             <li><a href="#" data-content="settings">Settings</a></li>
             <li>
-                <form id="logout-form" method="post" style="display: inline;">
-                    <button type="submit" name="logout" class="logout-button" onclick="return confirmLogout()">Logout</button>
-                </form>
+                    <button name="logout" class="logout-button" onclick="showLogoutConfirmation()">Logout</button>
             </li>
         </ul>
     </nav>
@@ -84,7 +92,7 @@ $conn->close();
         <?php endif; ?>
         <div id="content">
             <div id="dashboard" class="content-section">
-                <h2>Dashboard</h2>
+            <h2>Dashboard</h2>
                 <div class="dashboard-grid">
                     <div class="dashboard-item">
                         <h3>Male Farmers</h3>
@@ -100,9 +108,29 @@ $conn->close();
                     <p><?php echo $total_farmers_count; ?></p>
                 </div>
             </div>
-            <div id="manage-users" class="content-section" style="display: none;">This is the Manage Users content.</div>
-            <div id="reports" class="content-section" style="display: none;">This is the Reports content.</div>
-            <div id="settings" class="content-section" style="display: none;">
+            </div>
+            <div id="manage-users" class="content-section" style="display:none;">
+                <h2>Manage Users</h2>
+                <!-- Content for managing users -->
+            </div>
+            <div id="reports" class="content-section" style="display:none;">
+                <h2>Reports</h2>
+                <h3>Messages from Farmers</h3>
+                <?php if (!empty($messages)): ?>
+                    <ul>
+                        <?php foreach ($messages as $message): ?>
+                            <li>
+                                <strong><?php echo htmlspecialchars($message['username']); ?>:</strong>
+                                <?php echo htmlspecialchars($message['message']); ?>
+                                <em>(<?php echo $message['created_at']; ?>)</em>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <p>No messages from farmers.</p>
+                <?php endif; ?>
+            </div>
+            <div id="settings" class="content-section" style="display:none;">
                 <h2>Settings</h2>
                 <form id="settings-form" action="update_settings.php" method="post">
                     <div class="form-group">
@@ -119,6 +147,7 @@ $conn->close();
                     </div>
                     <button type="button" class="btn" onclick="showConfirmation()">Update Settings</button>
                 </form>
+                <!-- Content for settings -->
             </div>
         </div>
     </div>
@@ -133,8 +162,18 @@ $conn->close();
         </div>
     </div>
 
+     <!-- Logout Confirmation Modal -->
+    <div id="logout-confirmation-modal" class="modal">
+        <div class="modal-content">
+            <h2>Confirm Logout</h2>
+            <p>Are you sure you want to logout?</p>
+            <form id="logout-form" method="post">
+                <button type="submit" name="logout" class="btn confirm-btn">Confirm</button>
+                <button type="button" class="btn cancel-btn" onclick="closeLogoutConfirmation()">Cancel</button>
+        </div>
+    </div>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
             // Set greeting based on time of day
             var greetingEl = document.getElementById('greeting');
             var now = new Date();
@@ -149,30 +188,26 @@ $conn->close();
             }
             greetingEl.textContent = greeting + ', <?php echo htmlspecialchars($_SESSION['username']); ?>!';
 
-            document.querySelectorAll('.admin-nav a').forEach(link => {
-                link.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    document.querySelectorAll('.content-section').forEach(section => {
-                        section.style.display = 'none';
-                    });
-                    document.getElementById(this.getAttribute('data-content')).style.display = 'block';
+        document.querySelectorAll('.admin-nav a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.content-section').forEach(section => {
+                    section.style.display = 'none';
                 });
+                document.getElementById(this.getAttribute('data-content')).style.display = 'block';
             });
+        });
 
-            // Handle tab redirection
-            const urlParams = new URLSearchParams(window.location.search);
+        /*   // Handle tab redirection
+           const urlParams = new URLSearchParams(window.location.search);
             const tab = urlParams.get('tab');
             if (tab) {
                 document.querySelectorAll('.content-section').forEach(section => {
                     section.style.display = 'none';
                 });
                 document.getElementById(tab).style.display = 'block';
-            }
-        });
+            }; */
 
-        function confirmLogout() {
-            return confirm('Are you sure you want to logout?');
-        }
+   
 
         function showConfirmation() {
             document.getElementById('confirmation-modal').style.display = 'block';
@@ -185,6 +220,17 @@ $conn->close();
         function confirmUpdate() {
             document.getElementById('settings-form').submit();
         }
+        function showLogoutConfirmation() {
+            document.getElementById('logout-confirmation-modal').style.display = 'block';
+        }
+
+        function closeLogoutConfirmation() {
+            document.getElementById('logout-confirmation-modal').style.display = 'none';
+        }
+        function confirmLogout() {
+            document.getElementById('logout-form').submit();
+        }
+    </script>
     </script>
 </body>
 </html>
