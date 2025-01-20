@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['role'] = $role;
 
         if ($role == 0) {
-            header('Location: adminhome.php');
+            header('Location: adminhome.php?tab=dashboard');
         } else if ($role == 1) {
             header('Location: farmerhome.php');
         }

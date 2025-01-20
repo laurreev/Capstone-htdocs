@@ -420,3 +420,34 @@ body {
 .modal-content .cancel-btn:hover {
     background-color: #e53935;
 }
+
+/* Messages and Manage Users container styles */
+.messages-container, .manage-users-container {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 48%;
+}
+
+.manage-users-container form {
+    margin-bottom: 20px;
+}
+
+.manage-users-container .form-group {
+    margin-bottom: 15px;
+}
+
+.manage-users-container label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.manage-users-container input, .manage-users-container select {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}

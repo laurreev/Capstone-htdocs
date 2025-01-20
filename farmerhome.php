@@ -42,7 +42,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farmer</title>
+    <title>Farmer Home</title>
     <link rel="stylesheet" href="farmerhome.css">
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css' rel='stylesheet' />
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js'></script>
@@ -153,13 +153,30 @@ body  {
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set greeting based on time of day
+            var greetingEl = document.getElementById('greeting');
+            var now = new Date();
+            var hours = now.getHours();
+            var greeting;
+            if (hours < 12) {
+                greeting = 'Good morning';
+            } else if (hours < 18) {
+                greeting = 'Good afternoon';
+            } else {
+                greeting = 'Good evening';
+            }
+            greetingEl.textContent = greeting + ', <?php echo htmlspecialchars($_SESSION['username']); ?>!';
+        });
         document.querySelectorAll('.farmer-nav a').forEach(link => {
-            link.addEventListener('click', function() {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
                 document.querySelectorAll('.content-section').forEach(section => {
                     section.style.display = 'none';
                 });
                 const contentId = this.getAttribute('data-content');
                 document.getElementById(contentId).style.display = 'block';
+                history.pushState(null, '', `?tab=${contentId}`);
                 localStorage.setItem('activeTab', contentId);
             });
         });

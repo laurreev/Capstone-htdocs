@@ -214,56 +214,53 @@ body  {
                     </div>
                     <div class="right-box">
                         <h3>Manage Farmers</h3>
-                        <form method="post" action="adminhome.php">
-                            <h4>Add Farmer</h4>
-                            <div class="form-group">
-                                <label for="username">Username:</label>
-                                <input type="text" id="username" name="username" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="password">Password:</label>
-                                <input type="password" id="password" name="password" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="gender">Gender:</label>
-                                <select id="gender" name="gender" required>
-                                    <option value="m">Male</option>
-                                    <option value="f">Female</option>
-                                </select>
-                            </div>
-                            <button type="submit" name="add_farmer" class="btn">Add Farmer</button>
-                        </form>
+                        <form id="manage-farmers-form" method="post" action="adminhome.php">
+    <h4>Add Farmer</h4>
+    <input type="hidden" id="farmer-id" name="id">
+    <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+    </div>
+    <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+    </div>
+    <div class="form-group">
+        <label for="gender">Gender:</label>
+        <select id="gender" name="gender" required>
+            <option value="m">Male</option>
+            <option value="f">Female</option>
+        </select>
+    </div>
+    <button type="submit" name="add_farmer" class="btn">Add Farmer</button>
+    <button type="submit" name="update_farmer" class="btn" style="display:none;">Update Farmer</button>
+</form>
 
-                        <h4>Existing Farmers</h4>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Username</th>
-                                    <th>Gender</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($all_farmers as $farmer): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($farmer['username']); ?></td>
-                                        <td><?php echo htmlspecialchars($farmer['gender']); ?></td>
-                                        <td>
-                                            <form method="post" action="adminhome.php" style="display:inline;">
-                                                <input type="hidden" name="id" value="<?php echo $farmer['id']; ?>">
-                                                <input type="hidden" name="username" value="<?php echo $farmer['username']; ?>">
-                                                <input type="hidden" name="gender" value="<?php echo $farmer['gender']; ?>">
-                                                <button type="submit" name="update_farmer" class="btn">Update</button>
-                                            </form>
-                                            <form method="post" action="adminhome.php" style="display:inline;">
-                                                <input type="hidden" name="id" value="<?php echo $farmer['id']; ?>">
-                                                <button type="submit" name="delete_farmer" class="btn">Delete</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+<h4>Existing Farmers</h4>
+<table>
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Gender</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($all_farmers as $farmer): ?>
+            <tr>
+                <td><?php echo htmlspecialchars($farmer['username']); ?></td>
+                <td><?php echo htmlspecialchars($farmer['gender']); ?></td>
+                <td>
+                    <button type="button" class="btn edit-btn" onclick="editFarmer('<?php echo $farmer['id']; ?>', '<?php echo $farmer['username']; ?>', '<?php echo $farmer['gender']; ?>')">Edit</button>
+                    <form method="post" action="adminhome.php" style="display:inline;">
+                        <input type="hidden" name="id" value="<?php echo $farmer['id']; ?>">
+                        <button type="submit" name="delete_farmer" class="btn">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
                     </div>
                 </div>
             </div>
@@ -298,7 +295,7 @@ body  {
         </div>
     </div>
 
-     <!-- Logout Confirmation Modal -->
+    <!-- Logout Confirmation Modal -->
     <div id="logout-confirmation-modal" class="modal">
         <div class="modal-content">
             <h2>Confirm Logout</h2>
@@ -306,10 +303,12 @@ body  {
             <form id="logout-form" method="post">
                 <button type="submit" name="logout" class="btn confirm-btn">Confirm</button>
                 <button type="button" class="btn cancel-btn" onclick="closeLogoutConfirmation()">Cancel</button>
+            </form>
         </div>
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
             // Set greeting based on time of day
             var greetingEl = document.getElementById('greeting');
             var now = new Date();
@@ -323,27 +322,20 @@ body  {
                 greeting = 'Good evening';
             }
             greetingEl.textContent = greeting + ', <?php echo htmlspecialchars($_SESSION['username']); ?>!';
-
-        document.querySelectorAll('.admin-nav a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.querySelectorAll('.content-section').forEach(section => {
-                    section.style.display = 'none';
-                });
-                document.getElementById(this.getAttribute('data-content')).style.display = 'block';
-            });
         });
 
-        /*   // Handle tab redirection
-           const urlParams = new URLSearchParams(window.location.search);
-            const tab = urlParams.get('tab');
-            if (tab) {
+        document.querySelectorAll('.admin-nav a').forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
                 document.querySelectorAll('.content-section').forEach(section => {
                     section.style.display = 'none';
                 });
-                document.getElementById(tab).style.display = 'block';
-            }; */
-
-   
+                const contentId = this.getAttribute('data-content');
+                document.getElementById(contentId).style.display = 'block';
+                history.pushState(null, '', `?tab=${contentId}`);
+                localStorage.setItem('activeTab', contentId);
+            });
+        });
 
         function showConfirmation() {
             document.getElementById('confirmation-modal').style.display = 'block';
@@ -388,6 +380,15 @@ body  {
                 section.style.display = 'none';
             });
             document.getElementById(activeTab).style.display = 'block';
+        }
+
+        function editFarmer(id, username, gender) {
+            document.getElementById('farmer-id').value = id;
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = ''; // Clear password field
+            document.getElementById('gender').value = gender;
+            document.querySelector('button[name="add_farmer"]').style.display = 'none';
+            document.querySelector('button[name="update_farmer"]').style.display = 'inline-block';
         }
     </script>
 </body>
