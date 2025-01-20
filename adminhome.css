@@ -1,12 +1,15 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+html, body {
+    height: 100%;
     margin: 0;
     padding: 0;
 }
 
+body {
+    font-family: Arial, sans-serif;
+}
+
 .admin-nav {
-    background: #333;
+    background-color: #333;
     color: #fff;
     padding: 10px;
     border-radius: 0 0 10px 10px;
@@ -20,22 +23,29 @@ body {
 }
 
 .admin-nav ul {
-    list-style: none;
-    padding: 0;
+    list-style-type: none;
     margin: 0;
+    padding: 0;
     display: flex;
     justify-content: space-around;
 }
 
 .admin-nav ul li {
+    margin-right: 20px;
     display: inline;
 }
 
-.admin-nav ul li a {
+.admin-nav ul li a, .admin-nav ul li button {
     color: #fff;
     text-decoration: none;
-    padding: 10px 20px;
-    display: inline-block;
+    padding: 10px 15px;
+    display: block;
+}
+
+.admin-nav ul li button {
+    background: none;
+    border: none;
+    cursor: pointer;
 }
 
 .admin-nav ul li a:hover {
@@ -58,10 +68,11 @@ body {
 }
 
 .admin-container {
+    padding: 20px;
+    margin-top: 60px; /* Adjust for fixed nav */
     width: 80%;
     margin: 100px auto 0; /* Adjust margin to account for fixed nav */
-    padding: 20px;
-    background: #fff;
+    background: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
 }
@@ -81,13 +92,25 @@ body {
 }
 
 .alert.success {
-    background-color: #4CAF50;
+    background-color: #4ddd52c0;
     color: white;
 }
 
 .alert.error {
     background-color: #f44336;
     color: white;
+}
+
+.content-section {
+    display: none;
+}
+
+.content-section.active {
+    display: block;
+}
+
+#dashboard {
+    display: block;
 }
 
 .dashboard-stats {
@@ -124,14 +147,208 @@ body {
     margin-top: 20px;
 }
 
-.dashboard-total h3 {
-    margin: 0;
-    font-size: 24px;
+#dashboard {
+    display: block;
 }
 
-.dashboard-total p {
-    margin: 10px 0 0;
-    font-size: 18px;
+.dashboard-grid {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.dashboard-item {
+    background: #fff;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    flex: 1;
+    margin-right: 10px;
+}
+
+.dashboard-item:last-child {
+    margin-right: 0;
+}
+
+.dashboard-item.total {
+    margin-top: 20px;
+}
+
+/* Reports container styles */
+.reports-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.left-box, .right-box {
+    width: 48%;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.left-box {
+    margin-right: 2%;
+}
+
+.right-box {
+    margin-left: 2%;
+}
+
+/* Chat styles */
+.chat-container {
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 10px;
+    max-height: 400px;
+    overflow-y: auto;
+    background: #f9f9f9;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+.chat-box {
+    margin-bottom: 20px;
+}
+
+.chat-message {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    max-width: 70%;
+    word-wrap: break-word;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.chat-message.admin {
+    background-color: rgba(225, 255, 199, 0.8); /* Semi-transparent green */
+    text-align: right;
+    margin-left: auto;
+}
+
+.chat-message.farmer {
+    background-color: rgba(241, 241, 241, 0.8); /* Semi-transparent grey */
+    text-align: left;
+    margin-right: auto;
+}
+
+.chat-message strong {
+    display: block;
+    font-weight: bold;
+}
+
+.chat-message em {
+    display: block;
+    font-size: 12px;
+    color: #888;
+    margin-top: 5px;
+}
+
+/* Farmer list styles */
+.farmer-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.farmer-list li {
+    margin-bottom: 10px;
+}
+
+.farmer-list li a {
+    display: block;
+    padding: 10px;
+    background: #e9ecef;
+    border-radius: 10px;
+    text-decoration: none;
+    color: #333;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    transition: background 0.3s;
+}
+
+.farmer-list li a:hover {
+    background: #d9d9d9;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.btn {
+    background-color: #333;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background-color: #575757;
+}
+
+/* Reply form styles */
+#reply-form {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+#reply-form textarea {
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    resize: none;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+#reply-form .btn {
+    align-self: flex-end;
+    padding: 10px 20px;
+    border: none;
+    background-color: #333;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+#reply-form .btn:hover {
+    background-color: #555;
+}
+
+/* Back to messages button styles */
+.btn.back-btn {
+    margin-bottom: 20px;
+    padding: 10px 20px;
+    border: none;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+.btn.back-btn:hover {
+    background-color: #0056b3;
 }
 
 /* Modal styles */
@@ -156,7 +373,7 @@ body {
     border: 1px solid #888;
     width: 80%;
     max-width: 500px;
-    border-radius: 5px;
+    border-radius: 10px;
     text-align: center;
 }
 
@@ -174,16 +391,32 @@ body {
     cursor: pointer;
 }
 
-.modal-content button {
+.modal-content .btn {
     margin: 10px;
     padding: 10px 20px;
     border: none;
     background-color: #333;
     color: #fff;
     cursor: pointer;
-    border-radius: 5px;
+    border-radius: 10px;
 }
 
-.modal-content button:hover {
+.modal-content .btn:hover {
     background-color: #555;
+}
+
+.modal-content .confirm-btn {
+    background-color: #4CAF50; /* Green */
+}
+
+.modal-content .confirm-btn:hover {
+    background-color: #45a049;
+}
+
+.modal-content .cancel-btn {
+    background-color: #f44336; /* Red */
+}
+
+.modal-content .cancel-btn:hover {
+    background-color: #e53935;
 }

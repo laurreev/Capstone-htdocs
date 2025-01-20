@@ -24,6 +24,17 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+// Fetch messages from admin
+$messages = [];
+$sql = "SELECT * FROM messages WHERE (username = 'admin' AND recipient = '{$_SESSION['username']}') OR (username = '{$_SESSION['username']}' AND recipient = 'admin') ORDER BY created_at ASC";
+$result = $conn->query($sql);
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $messages[] = $row;
+    }
+}
+
+$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -50,15 +61,15 @@ body  {
     <nav class="farmer-nav">
         <ul>
             <li><a href="#" data-content="dashboard">Dashboard</a></li>
-            <li><a href="#" data-content="events">Events</a></li>
+            <li><a href="#" data-content="messages">Messages</a></li>
             <li><a href="#" data-content="settings">Settings</a></li>
             <li>
-            <button name="logout" class="logout-button" onclick="showLogoutConfirmation()">Logout</button>
+                <button name="logout" class="logout-button" onclick="showLogoutConfirmation()">Logout</button>
             </li>
         </ul>
     </nav>
     <div class="farmer-container">
-        <h1 id="greeting"></h1>
+        <h1 id="greeting">Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h1>
         <?php if (isset($_SESSION['success'])): ?>
             <div class="alert success">
                 <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
@@ -73,17 +84,32 @@ body  {
             <div id="dashboard" class="content-section">
                 <div id='calendar-container'></div>
             </div>
-            <div id="events" class="content-section" style="display: none;">
+            <div id="messages" class="content-section" style="display: none;">
+                <h2>Messages</h2>
+                <div class="chat-container">
+                    <?php if (!empty($messages)): ?>
+                        <?php foreach ($messages as $message): ?>
+                            <div class="chat-message <?php echo $message['username'] == 'admin' ? 'admin' : 'farmer'; ?>">
+                                <strong><?php echo htmlspecialchars($message['username']); ?>:</strong>
+                                <?php echo htmlspecialchars($message['message']); ?>
+                                <em>(<?php echo $message['created_at']; ?>)</em>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p>No messages from admin.</p>
+                    <?php endif; ?>
+                </div>
                 <h2>Send a Message to Admin</h2>
                 <form id="message-form" action="send_message.php" method="post">
                     <div class="form-group">
                         <label for="message">Message:</label>
-                        <textarea id="message" name="message" rows="4" required></textarea>
+                        <textarea id="message" name="message" placeholder="Type your message here..." rows="4" required></textarea>
+                        <input type="hidden" name="recipient" value="admin">
                     </div>
                     <button type="submit" class="btn">Send Message</button>
                 </form>
             </div>
-            <div id="settings" class="content-section" style="display: none;">
+            <div id="settings" class="content-section" style="display:none;">
                 <h2>Settings</h2>
                 <form id="settings-form" action="update_settings.php" method="post">
                     <div class="form-group">
@@ -114,58 +140,28 @@ body  {
         </div>
     </div>
 
-<!-- Logout Confirmation Modal -->
-<div id="logout-confirmation-modal" class="modal">
+    <!-- Logout Confirmation Modal -->
+    <div id="logout-confirmation-modal" class="modal">
         <div class="modal-content">
             <h2>Confirm Logout</h2>
             <p>Are you sure you want to logout?</p>
             <form id="logout-form" method="post">
                 <button type="submit" name="logout" class="btn confirm-btn">Confirm</button>
                 <button type="button" class="btn cancel-btn" onclick="closeLogoutConfirmation()">Cancel</button>
+            </form>
         </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var calendarEl = document.getElementById('calendar-container');
-            var calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth'
-            });
-            calendar.render();
-
-            // Set greeting based on time of day
-            var greetingEl = document.getElementById('greeting');
-            var now = new Date();
-            var hours = now.getHours();
-            var greeting;
-            if (hours < 12) {
-                greeting = 'Good morning';
-            } else if (hours < 18) {
-                greeting = 'Good afternoon';
-            } else {
-                greeting = 'Good evening';
-            }
-            greetingEl.textContent = greeting + ', <?php echo htmlspecialchars($_SESSION['username']); ?>!';
-
-            document.querySelectorAll('.farmer-nav a').forEach(link => {
-                link.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    document.querySelectorAll('.content-section').forEach(section => {
-                        section.style.display = 'none';
-                    });
-                    document.getElementById(this.getAttribute('data-content')).style.display = 'block';
-                });
-            });
-
-            // Handle tab redirection
-            const urlParams = new URLSearchParams(window.location.search);
-            const tab = urlParams.get('tab');
-            if (tab) {
+        document.querySelectorAll('.farmer-nav a').forEach(link => {
+            link.addEventListener('click', function() {
                 document.querySelectorAll('.content-section').forEach(section => {
                     section.style.display = 'none';
                 });
-                document.getElementById(tab).style.display = 'block';
-            }
+                const contentId = this.getAttribute('data-content');
+                document.getElementById(contentId).style.display = 'block';
+                localStorage.setItem('activeTab', contentId);
+            });
         });
 
         function showConfirmation() {
@@ -179,6 +175,7 @@ body  {
         function confirmUpdate() {
             document.getElementById('settings-form').submit();
         }
+
         function showLogoutConfirmation() {
             document.getElementById('logout-confirmation-modal').style.display = 'block';
         }
@@ -186,9 +183,35 @@ body  {
         function closeLogoutConfirmation() {
             document.getElementById('logout-confirmation-modal').style.display = 'none';
         }
+
         function confirmLogout() {
             document.getElementById('logout-form').submit();
         }
+
+        // Handle tab redirection
+        const urlParams = new URLSearchParams(window.location.search);
+        const tab = urlParams.get('tab');
+        const activeTab = localStorage.getItem('activeTab') || 'dashboard';
+        if (tab) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(tab).style.display = 'block';
+        } else {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(activeTab).style.display = 'block';
+        }
+
+        // Initialize FullCalendar
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar-container');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth'
+            });
+            calendar.render();
+        });
     </script>
 </body>
 </html>
