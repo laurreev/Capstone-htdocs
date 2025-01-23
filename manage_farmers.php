@@ -21,7 +21,7 @@ if ($conn->connect_error) {
 // Handle add farmer
 if (isset($_POST['add_farmer'])) {
     $username = $_POST['username'];
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+    $password = $_POST['password'];
     $gender = $_POST['gender'];
 
     $sql = "INSERT INTO user (username, password, role, gender) VALUES ('$username', '$password', 1, '$gender')";

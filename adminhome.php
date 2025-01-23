@@ -24,6 +24,18 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+// Fetch seeds from the database
+$seeds = [];
+$sql = "SELECT * FROM seeds";
+$result = $conn->query($sql);
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $seeds[] = $row;
+    }
+} else {
+    echo "Error fetching seeds: " . $conn->error;
+}
+
 // Fetch number of male farmers
 $male_farmers_count = 0;
 $sql = "SELECT COUNT(*) as count FROM user WHERE role = 1 AND gender = 'm'";
@@ -68,44 +80,45 @@ if ($selected_farmer) {
     }
 }
 
-// Handle add farmer
-if (isset($_POST['add_farmer'])) {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
-    $gender = $_POST['gender'];
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (isset($_POST['id']) && !empty($_POST['id'])) {
+        // Update farmer
+        $id = $_POST['id'];
+        $username = $_POST['username'];
+        $password = $_POST['password'];
+        $gender = $_POST['gender'];
 
-    $sql = "INSERT INTO user (username, password, role, gender) VALUES ('$username', '$password', 1, '$gender')";
-    if ($conn->query($sql) === TRUE) {
-        $_SESSION['success'] = "Farmer added successfully.";
+        $sql = "UPDATE user SET username='$username', password='$password', gender='$gender' WHERE id='$id'";
+        if ($conn->query($sql) === TRUE) {
+            $_SESSION['success'] = "Farmer updated successfully.";
+        } else {
+            $_SESSION['error'] = "Error updating farmer: " . $conn->error;
+        }
+    } elseif (isset($_POST['delete_id']) && !empty($_POST['delete_id'])) {
+        // Delete farmer
+        $id = $_POST['delete_id'];
+
+        $sql = "DELETE FROM user WHERE id='$id'";
+        if ($conn->query($sql) === TRUE) {
+            $_SESSION['success'] = "Farmer deleted successfully.";
+        } else {
+            $_SESSION['error'] = "Error deleting farmer: " . $conn->error;
+        }
     } else {
-        $_SESSION['error'] = "Error adding farmer: " . $conn->error;
+        // Add farmer
+        $username = $_POST['username'];
+        $password = $_POST['password'];
+        $gender = $_POST['gender'];
+
+        $sql = "INSERT INTO user (username, password, role, gender) VALUES ('$username', '$password', 1, '$gender')";
+        if ($conn->query($sql) === TRUE) {
+            $_SESSION['success'] = "Farmer added successfully.";
+        } else {
+            $_SESSION['error'] = "Error adding farmer: " . $conn->error;
+        }
     }
-}
-
-// Handle update farmer
-if (isset($_POST['update_farmer'])) {
-    $id = $_POST['id'];
-    $username = $_POST['username'];
-    $gender = $_POST['gender'];
-
-    $sql = "UPDATE user SET username='$username', gender='$gender' WHERE id='$id'";
-    if ($conn->query($sql) === TRUE) {
-        $_SESSION['success'] = "Farmer updated successfully.";
-    } else {
-        $_SESSION['error'] = "Error updating farmer: " . $conn->error;
-    }
-}
-
-// Handle delete farmer
-if (isset($_POST['delete_farmer'])) {
-    $id = $_POST['id'];
-
-    $sql = "DELETE FROM user WHERE id='$id'";
-    if ($conn->query($sql) === TRUE) {
-        $_SESSION['success'] = "Farmer deleted successfully.";
-    } else {
-        $_SESSION['error'] = "Error deleting farmer: " . $conn->error;
-    }
+    header('Location: adminhome.php?tab=manage-farmer');
+    exit();
 }
 
 // Fetch all farmers for manage users section
@@ -141,8 +154,8 @@ body  {
 <body>
     <nav class="admin-nav">
         <ul>
-            <li><a href="#" data-content="dashboard">Dashboard</a></li>
-            <li><a href="#" data-content="reports">Reports</a></li>
+             <li><a href="#" data-content="dashboard">Dashboard</a></li>
+            <li><a href="#" data-content="messages">Messages</a></li> <!-- Updated nav item -->
             <li><a href="#" data-content="settings">Settings</a></li>
             <li>
                 <button type="button" class="logout-button" onclick="showLogoutConfirmation()">Logout</button>
@@ -150,17 +163,30 @@ body  {
         </ul>
     </nav>
     <div class="admin-container">
-        <h1 id="greeting"></h1>
-        <?php if (isset($_SESSION['success'])): ?>
-            <div class="alert success">
-                <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
-            </div>
-        <?php endif; ?>
-        <?php if (isset($_SESSION['error'])): ?>
-            <div class="alert error">
-                <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
-            </div>
-        <?php endif; ?>
+    <button type="button" class="toggle-panel-button" onclick="toggleSidePanel()">☰</button>
+    <div class="side-panel">
+            <ul>
+                <li><a href="#" data-content="dashboard">Dashboard</a></li>
+                <li><a href="#" data-content="items-list">Items List</a></li>
+                <li><a href="#" data-content="category-list">Category List</a></li>
+                <li><a href="#" data-content="reservation-list">Reservation List</a></li>
+                <li><a href="#" data-content="reservation-report">Reservation Report</a></li>
+                <li><a href="#" data-content="manage-farmer">Manage Farmers</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
+            <div id="alert" class="alert" style="display:none;"></div>
+            <h1 id="greeting"></h1>
+            <?php if (isset($_SESSION['success'])): ?>
+                <div class="alert success">
+                    <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
+                </div>
+            <?php endif; ?>
+            <?php if (isset($_SESSION['error'])): ?>
+                <div class="alert error">
+                    <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
+                </div>
+            <?php endif; ?>
         <div id="content">
             <div id="dashboard" class="content-section">
                 <h2>Dashboard</h2>
@@ -179,88 +205,143 @@ body  {
                     </div>
                 </div>
             </div>
-            <div id="reports" class="content-section" style="display:none;">
-                <h2>Reports</h2>
-                <div class="reports-container">
-                    <div class="left-box">
-                        <h3>Farmers with Messages</h3>
-                        <ul class="farmer-list">
-                            <?php foreach ($farmers as $farmer): ?>
-                                <li><a href="adminhome.php?tab=reports&farmer=<?php echo htmlspecialchars($farmer); ?>"><?php echo htmlspecialchars($farmer); ?></a></li>
-                            <?php endforeach; ?>
-                        </ul>
-                        <?php if ($selected_farmer): ?>
-                            <button class="btn back-btn" onclick="window.location.href='adminhome.php?tab=reports'">Back to messages</button>
-                            <h3>Conversation with <?php echo htmlspecialchars($selected_farmer); ?></h3>
-                            <div class="chat-container">
-                                <?php if (!empty($messages)): ?>
-                                    <?php foreach ($messages as $message): ?>
-                                        <div class="chat-message <?php echo $message['username'] == 'admin' ? 'admin' : 'farmer'; ?>">
-                                            <strong><?php echo htmlspecialchars($message['username']); ?>:</strong>
-                                            <?php echo htmlspecialchars($message['message']); ?>
-                                            <em>(<?php echo $message['created_at']; ?>)</em>
-                                        </div>
-                                    <?php endforeach; ?>
-                                <?php else: ?>
-                                    <p>No messages from this farmer.</p>
-                                <?php endif; ?>
-                            </div>
-                            <form id="reply-form" method="post" action="send_message.php">
-                                <input type="hidden" name="recipient" value="<?php echo htmlspecialchars($selected_farmer); ?>">
-                                <textarea name="message" rows="4" placeholder="Type your message here..." required></textarea>
-                                <button type="submit" class="btn">Send</button>
-                            </form>
-                        <?php endif; ?>
-                    </div>
-                    <div class="right-box">
-                        <h3>Manage Farmers</h3>
-                        <form id="manage-farmers-form" method="post" action="adminhome.php">
-    <h4>Add Farmer</h4>
-    <input type="hidden" id="farmer-id" name="id">
-    <div class="form-group">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
-    </div>
-    <div class="form-group">
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-    </div>
-    <div class="form-group">
-        <label for="gender">Gender:</label>
-        <select id="gender" name="gender" required>
-            <option value="m">Male</option>
-            <option value="f">Female</option>
-        </select>
-    </div>
-    <button type="button" class="btn" onclick="showAddConfirmation()">Add Farmer</button>
-    <button type="button" class="btn" onclick="showUpdateConfirmation()" style="display:none;">Update Farmer</button>
-</form>
-
-<h4>Existing Farmers</h4>
-<table>
-    <thead>
-        <tr>
-            <th>Username</th>
-            <th>Gender</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php foreach ($all_farmers as $farmer): ?>
-            <tr>
-                <td><?php echo htmlspecialchars($farmer['username']); ?></td>
-                <td><?php echo htmlspecialchars($farmer['gender']); ?></td>
-                <td>
-                <button type="button" class="btn edit-btn" onclick="editFarmer('<?php echo $farmer['id']; ?>', '<?php echo $farmer['username']; ?>', '********', '<?php echo $farmer['gender']; ?>')">Edit</button>
-                <button type="button" class="btn" onclick="showDeleteConfirmation('<?php echo $farmer['id']; ?>')">Delete</button>
-                </td>
-            </tr>
-        <?php endforeach; ?>
-    </tbody>
-</table>
-                    </div>
-                </div>
+            <div id="items-list" class="content-section" style="display:none;">
+                <h2>Variety of Seeds</h2>
+                <table class="seeds-table">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Seed Name</th>
+                            <th>Description</th>
+                            <th>Availability</th>
+                            <th>Image</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($seeds as $seed): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($seed['id']); ?></td>
+                                <td><?php echo htmlspecialchars($seed['seed_name']); ?></td>
+                                <td><?php echo htmlspecialchars($seed['description']); ?></td>
+                                <td><?php echo htmlspecialchars($seed['availability']); ?></td>
+                                <td>
+                                    <form method="post" action="upload_image.php" enctype="multipart/form-data" class="upload-image-form">
+                                        <input type="hidden" name="seed_id" value="<?php echo $seed['id']; ?>">
+                                        <input type="file" name="image" accept="image/*">
+                                        <button type="submit" class="btn">Upload</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn action-btn" onclick="toggleActionButtons(<?php echo $seed['id']; ?>)">Action</button>
+                                    <div id="action-buttons-<?php echo $seed['id']; ?>" class="action-buttons" style="display:none;">
+                                        <button type="button" class="btn edit-btn" onclick="editSeed(<?php echo $seed['id']; ?>)">Edit</button>
+                                        <button type="button" class="btn delete-btn" onclick="deleteSeed(<?php echo $seed['id']; ?>)">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
+                <div id="category-list" class="content-section" style="display:none;">
+                    <h2>Category List</h2>
+                    <!-- Add your category list content here -->
+                </div>
+                <div id="reservation-list" class="content-section" style="display:none;">
+                    <h2>Reservation List</h2>
+                    <!-- Add your reservation list content here -->
+                </div>
+                <div id="reservation-report" class="content-section" style="display:none;">
+                    <h2>Reservation Report</h2>
+                    <!-- Add your reservation report content here -->
+                </div>
+                <div id="manage-farmer" class="content-section" style="display:none;">
+    <h2>Manage Farmers</h2>
+    <div class="manage-farmers-container">
+        <form id="manage-farmers-form" method="post" action="adminhome.php">
+            <h4>Add Farmer</h4>
+            <input type="hidden" id="farmer-id" name="id">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <label for="gender">Gender:</label>
+                <select id="gender" name="gender" required>
+                    <option value="m">Male</option>
+                    <option value="f">Female</option>
+                </select>
+            </div>
+            <button type="button" class="btn" onclick="showAddConfirmation()">Add Farmer</button>
+            <button type="button" class="btn" onclick="showUpdateConfirmation()" style="display:none;">Update Farmer</button>
+        </form>
+
+        <h4>Existing Farmers</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Gender</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($all_farmers as $farmer): ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($farmer['username']); ?></td>
+                        <td><?php echo htmlspecialchars($farmer['gender']); ?></td>
+                        <td>
+                            <button type="button" class="btn edit-btn" onclick="editFarmer('<?php echo $farmer['id']; ?>', '<?php echo $farmer['username']; ?>', '********', '<?php echo $farmer['gender']; ?>')">Edit</button>
+                            <button type="button" class="btn" onclick="showDeleteConfirmation('<?php echo $farmer['id']; ?>')">Delete</button>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+                
+<div id="messages" class="content-section" style="display:none;"> <!-- Updated tab id -->
+    <h2>Messages</h2> <!-- Updated heading -->
+    <div class="messages-container">
+        <div class="message-box"> <!-- Updated class name -->
+            <h3>Farmers with Messages</h3>
+            <ul class="farmer-list">
+                <?php foreach ($farmers as $farmer): ?>
+                    <li><a href="#" data-farmer="<?php echo htmlspecialchars($farmer); ?>"><?php echo htmlspecialchars($farmer); ?></a></li>
+                <?php endforeach; ?>
+            </ul>
+            <button class="btn back-btn" onclick="showFarmersList()" style="display:none;">Back to messages</button>
+        </div>
+        <div class="conversation-box" style="display:none;">
+            <h3>Conversation with <span id="conversation-farmer"></span></h3>
+            <div class="chat-container">
+                <?php if (!empty($messages)): ?>
+                    <?php foreach ($messages as $message): ?>
+                        <div class="chat-message <?php echo $message['username'] == 'admin' ? 'admin' : 'farmer'; ?>">
+                            <strong><?php echo htmlspecialchars($message['username']); ?>:</strong>
+                            <?php echo htmlspecialchars($message['message']); ?>
+                            <em>(<?php echo $message['created_at']; ?>)</em>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p>No messages from this farmer.</p>
+                <?php endif; ?>
+            </div>
+            <form id="reply-form" method="post" action="send_message.php">
+    <input type="hidden" name="recipient" id="recipient" value="<?php echo htmlspecialchars($selected_farmer); ?>">
+    <textarea name="message" rows="4" placeholder="Type your message here..." required></textarea>
+    <button type="submit" class="btn">Send Message</button>
+</form>
+        </div>
+    </div>
+</div>
+
             <div id="settings" class="content-section" style="display:none;">
                 <h2>Settings</h2>
                 <form id="settings-form" action="update_settings.php" method="post">
@@ -307,9 +388,9 @@ body  {
     <div class="modal-content">
         <h2>Confirm Delete</h2>
         <p>Are you sure you want to delete this farmer?</p>
-        <form id="delete-farmer-form" method="post" action="adminhome.php">
-            <input type="hidden" id="delete-farmer-id" name="id">
-            <button type="submit" name="delete_farmer" class="btn confirm-btn">Confirm</button>
+        <form id="delete-form" method="post" action="adminhome.php">
+            <input type="hidden" id="delete-farmer-id" name="delete_id">
+            <button type="submit" class="btn confirm-btn">Confirm</button>
             <button type="button" class="btn cancel-btn" onclick="closeDeleteConfirmation()">Cancel</button>
         </form>
     </div>
@@ -320,7 +401,7 @@ body  {
         <div class="modal-content">
             <h2>Confirm Update</h2>
             <p>Are you sure you want to update your settings?</p>
-            <button class="btn confirm-btn" onclick="confirmUpdate()">Confirm</button>
+            <button class="btn confirm-btn" onclick="confirmUpdateSettings()">Confirm</button>
             <button class="btn cancel-btn" onclick="closeConfirmation()">Cancel</button>
         </div>
     </div>
@@ -337,121 +418,26 @@ body  {
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set greeting based on time of day
-            var greetingEl = document.getElementById('greeting');
-            var now = new Date();
-            var hours = now.getHours();
-            var greeting;
-            if (hours < 12) {
-                greeting = 'Good morning';
-            } else if (hours < 18) {
-                greeting = 'Good afternoon';
-            } else {
-                greeting = 'Good evening';
-            }
-            greetingEl.textContent = greeting + ', <?php echo htmlspecialchars($_SESSION['username']); ?>!';
-        });
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set greeting based on time of day
+    var greetingEl = document.getElementById('greeting');
+    var now = new Date();
+    var hours = now.getHours();
+    var greeting;
+    if (hours < 12) {
+        greeting = 'Good morning';
+    } else if (hours < 18) {
+        greeting = 'Good afternoon';
+    } else {
+        greeting = 'Good evening';
+    }
+    greetingEl.textContent = greeting + ', <?php echo htmlspecialchars($_SESSION['username']); ?>!';
+});
+</script>
 
-        document.querySelectorAll('.admin-nav a').forEach(link => {
-            link.addEventListener('click', function(event) {
-                event.preventDefault();
-                document.querySelectorAll('.content-section').forEach(section => {
-                    section.style.display = 'none';
-                });
-                const contentId = this.getAttribute('data-content');
-                document.getElementById(contentId).style.display = 'block';
-                history.pushState(null, '', `?tab=${contentId}`);
-                localStorage.setItem('activeTab', contentId);
-            });
-        });
-
-        function showConfirmation() {
-            document.getElementById('confirmation-modal').style.display = 'block';
-        }
-
-        function closeConfirmation() {
-            document.getElementById('confirmation-modal').style.display = 'none';
-        }
-
-        function confirmUpdate() {
-            document.getElementById('settings-form').submit();
-        }
-
-        function showLogoutConfirmation() {
-            document.getElementById('logout-confirmation-modal').style.display = 'block';
-        }
-
-        function closeLogoutConfirmation() {
-            document.getElementById('logout-confirmation-modal').style.display = 'none';
-        }
-
-        function confirmLogout() {
-            document.getElementById('logout-form').submit();
-        }
-
-        document.querySelectorAll('.chat-box').forEach(box => {
-            box.addEventListener('click', function() {
-                document.getElementById('recipient').value = this.querySelector('h4').textContent.replace('Conversation with ', '');
-            });
-        });
-        // Handle tab redirection
-        const urlParams = new URLSearchParams(window.location.search);
-        const tab = urlParams.get('tab');
-        const activeTab = localStorage.getItem('activeTab') || 'dashboard';
-        if (tab) {
-            document.querySelectorAll('.content-section').forEach(section => {
-                section.style.display = 'none';
-            });
-            document.getElementById(tab).style.display = 'block';
-        } else {
-            document.querySelectorAll('.content-section').forEach(section => {
-                section.style.display = 'none';
-            });
-            document.getElementById(activeTab).style.display = 'block';
-        }
-
-        function editFarmer(id, username, password, gender) {
-    document.getElementById('farmer-id').value = id;
-    document.getElementById('username').value = username;
-    document.getElementById('password').value = password; // Show password in asterisk form
-    document.getElementById('gender').value = gender;
-    document.querySelector('button[name="add_farmer"]').style.display = 'none';
-    document.querySelector('button[name="update_farmer"]').style.display = 'inline-block';
-}
-        function showAddConfirmation() {
-    document.getElementById('add-confirmation-modal').style.display = 'block';
-}
-
-function closeAddConfirmation() {
-    document.getElementById('add-confirmation-modal').style.display = 'none';
-}
-
-function confirmAdd() {
-    document.getElementById('manage-farmers-form').submit();
-}
-
-function showUpdateConfirmation() {
-    document.getElementById('update-confirmation-modal').style.display = 'block';
-}
-
-function closeUpdateConfirmation() {
-    document.getElementById('update-confirmation-modal').style.display = 'none';
-}
-
-function confirmUpdate() {
-    document.getElementById('manage-farmers-form').submit();
-}
-
-function showDeleteConfirmation(id) {
-    document.getElementById('delete-farmer-id').value = id;
-    document.getElementById('delete-confirmation-modal').style.display = 'block';
-}
-
-function closeDeleteConfirmation() {
-    document.getElementById('delete-confirmation-modal').style.display = 'none';
-}
+    <script src="scriptadmin.js">
+        
     </script>
 </body>
 </html>

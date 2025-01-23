@@ -69,6 +69,16 @@ body  {
         </ul>
     </nav>
     <div class="farmer-container">
+    <button type="button" class="toggle-panel-button" onclick="toggleSidePanel()">☰</button>
+        <div class="side-panel">
+            <ul>
+                <li><a href="#" data-content="dashboard">Dashboard</a></li>
+                <li><a href="#" data-content="events">Events</a></li>
+                <li><a href="#" data-content="reserve-seed">Reserve Seed</a></li>
+                <li><a href="#" data-content="reservation-status">Reservation Status</a></li>
+            </ul>
+        </div>
+        <div class="main-content">
         <h1 id="greeting">Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h1>
         <?php if (isset($_SESSION['success'])): ?>
             <div class="alert success">
@@ -83,6 +93,22 @@ body  {
         <div id="content">
             <div id="dashboard" class="content-section">
                 <div id='calendar-container'></div>
+            </div>
+            <div id="dashboard" class="content-section">
+                <h2>Dashboard</h2>
+                <!-- Dashboard content here -->
+            </div>
+            <div id="events" class="content-section" style="display:none;">
+                <h2>Events</h2>
+                <!-- Events content here -->
+            </div>
+            <div id="reserve-seed" class="content-section" style="display:none;">
+                <h2>Reserve Seed</h2>
+                <!-- Reserve Seed content here -->
+            </div>
+            <div id="reservation-status" class="content-section" style="display:none;">
+                <h2>Reservation Status</h2>
+                <!-- Reservation Status content here -->
             </div>
             <div id="messages" class="content-section" style="display: none;">
                 <h2>Messages</h2>
@@ -100,7 +126,7 @@ body  {
                     <?php endif; ?>
                 </div>
                 <h2>Send a Message to Admin</h2>
-                <form id="message-form" action="send_message.php" method="post">
+                <form id="message-form" action="send_msg_as_farmer.php" method="post">
                     <div class="form-group">
                         <label for="message">Message:</label>
                         <textarea id="message" name="message" placeholder="Type your message here..." rows="4" required></textarea>
@@ -167,68 +193,38 @@ body  {
                 greeting = 'Good evening';
             }
             greetingEl.textContent = greeting + ', <?php echo htmlspecialchars($_SESSION['username']); ?>!';
-        });
-        document.querySelectorAll('.farmer-nav a').forEach(link => {
+      // Scroll to the latest message
+      setTimeout(function() {
+            var chatContainer = document.querySelector('.chat-container');
+            if (chatContainer) {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        }, 100); // Delay to ensure messages are rendered
+    });
+    
+        // Scroll to the latest message when the "Messages" tab is clicked
+        document.querySelectorAll('.farmer-nav a, .side-panel a').forEach(link => {
             link.addEventListener('click', function(event) {
                 event.preventDefault();
+                const contentId = this.getAttribute('data-content');
                 document.querySelectorAll('.content-section').forEach(section => {
                     section.style.display = 'none';
                 });
-                const contentId = this.getAttribute('data-content');
                 document.getElementById(contentId).style.display = 'block';
                 history.pushState(null, '', `?tab=${contentId}`);
                 localStorage.setItem('activeTab', contentId);
+
+                if (contentId === 'messages') {
+                    var chatContainer = document.querySelector('.chat-container');
+                    if (chatContainer) {
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }
+                }
             });
         });
+    </script>
+    <script src="scriptfarmer.js">
 
-        function showConfirmation() {
-            document.getElementById('confirmation-modal').style.display = 'block';
-        }
-
-        function closeConfirmation() {
-            document.getElementById('confirmation-modal').style.display = 'none';
-        }
-
-        function confirmUpdate() {
-            document.getElementById('settings-form').submit();
-        }
-
-        function showLogoutConfirmation() {
-            document.getElementById('logout-confirmation-modal').style.display = 'block';
-        }
-
-        function closeLogoutConfirmation() {
-            document.getElementById('logout-confirmation-modal').style.display = 'none';
-        }
-
-        function confirmLogout() {
-            document.getElementById('logout-form').submit();
-        }
-
-        // Handle tab redirection
-        const urlParams = new URLSearchParams(window.location.search);
-        const tab = urlParams.get('tab');
-        const activeTab = localStorage.getItem('activeTab') || 'dashboard';
-        if (tab) {
-            document.querySelectorAll('.content-section').forEach(section => {
-                section.style.display = 'none';
-            });
-            document.getElementById(tab).style.display = 'block';
-        } else {
-            document.querySelectorAll('.content-section').forEach(section => {
-                section.style.display = 'none';
-            });
-            document.getElementById(activeTab).style.display = 'block';
-        }
-
-        // Initialize FullCalendar
-        document.addEventListener('DOMContentLoaded', function() {
-            var calendarEl = document.getElementById('calendar-container');
-            var calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth'
-            });
-            calendar.render();
-        });
     </script>
 </body>
 </html>

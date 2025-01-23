@@ -304,3 +304,101 @@ body {
 .modal-content .cancel-btn:hover {
     background-color: #e53935;
 }
+
+/* Side panel styles */
+.side-panel {
+    width: 250px;
+    background-color: #333;
+    color: #fff;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+    transform: translateX(-100%);
+}
+
+.side-panel.visible {
+    transform: translateX(0);
+}
+
+.side-panel ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.side-panel ul li {
+    padding: 15px;
+    text-align: center;
+}
+
+.side-panel ul li a {
+    color: #fff;
+    text-decoration: none;
+    display: block;
+}
+
+.side-panel ul li a:hover {
+    background-color: #575757;
+}
+
+/* Toggle button styles */
+.toggle-panel-button {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+.toggle-panel-button:hover {
+    background-color: #575757;
+}
+
+/* Main content styles */
+.main-content {
+    padding: 20px;
+}
+
+.content-section {
+    display: none;
+}
+
+.content-section.active {
+    display: block;
+}
+
+/* Navigation styles */
+.farmer-nav ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    background-color: #333;
+    overflow: hidden;
+}
+
+.farmer-nav ul li {
+    float: left;
+}
+
+.farmer-nav ul li a,
+.farmer-nav ul li button {
+    display: block;
+    color: #fff;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.farmer-nav ul li a:hover,
+.farmer-nav ul li button:hover {
+    background-color: #575757;
+}
