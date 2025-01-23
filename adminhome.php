@@ -232,8 +232,8 @@ body  {
             <option value="f">Female</option>
         </select>
     </div>
-    <button type="submit" name="add_farmer" class="btn">Add Farmer</button>
-    <button type="submit" name="update_farmer" class="btn" style="display:none;">Update Farmer</button>
+    <button type="button" class="btn" onclick="showAddConfirmation()">Add Farmer</button>
+    <button type="button" class="btn" onclick="showUpdateConfirmation()" style="display:none;">Update Farmer</button>
 </form>
 
 <h4>Existing Farmers</h4>
@@ -251,11 +251,8 @@ body  {
                 <td><?php echo htmlspecialchars($farmer['username']); ?></td>
                 <td><?php echo htmlspecialchars($farmer['gender']); ?></td>
                 <td>
-                    <button type="button" class="btn edit-btn" onclick="editFarmer('<?php echo $farmer['id']; ?>', '<?php echo $farmer['username']; ?>', '<?php echo $farmer['gender']; ?>')">Edit</button>
-                    <form method="post" action="adminhome.php" style="display:inline;">
-                        <input type="hidden" name="id" value="<?php echo $farmer['id']; ?>">
-                        <button type="submit" name="delete_farmer" class="btn">Delete</button>
-                    </form>
+                <button type="button" class="btn edit-btn" onclick="editFarmer('<?php echo $farmer['id']; ?>', '<?php echo $farmer['username']; ?>', '********', '<?php echo $farmer['gender']; ?>')">Edit</button>
+                <button type="button" class="btn" onclick="showDeleteConfirmation('<?php echo $farmer['id']; ?>')">Delete</button>
                 </td>
             </tr>
         <?php endforeach; ?>
@@ -284,6 +281,39 @@ body  {
             </div>
         </div>
     </div>
+
+<!-- Add Confirmation Modal -->
+<div id="add-confirmation-modal" class="modal">
+    <div class="modal-content">
+        <h2>Confirm Add</h2>
+        <p>Are you sure you want to add this farmer?</p>
+        <button class="btn confirm-btn" onclick="confirmAdd()">Confirm</button>
+        <button class="btn cancel-btn" onclick="closeAddConfirmation()">Cancel</button>
+    </div>
+</div>
+
+<!-- Update Confirmation Modal -->
+<div id="update-confirmation-modal" class="modal">
+    <div class="modal-content">
+        <h2>Confirm Update</h2>
+        <p>Are you sure you want to update this farmer?</p>
+        <button class="btn confirm-btn" onclick="confirmUpdate()">Confirm</button>
+        <button class="btn cancel-btn" onclick="closeUpdateConfirmation()">Cancel</button>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-confirmation-modal" class="modal">
+    <div class="modal-content">
+        <h2>Confirm Delete</h2>
+        <p>Are you sure you want to delete this farmer?</p>
+        <form id="delete-farmer-form" method="post" action="adminhome.php">
+            <input type="hidden" id="delete-farmer-id" name="id">
+            <button type="submit" name="delete_farmer" class="btn confirm-btn">Confirm</button>
+            <button type="button" class="btn cancel-btn" onclick="closeDeleteConfirmation()">Cancel</button>
+        </form>
+    </div>
+</div>
 
     <!-- Confirmation Modal -->
     <div id="confirmation-modal" class="modal">
@@ -382,14 +412,46 @@ body  {
             document.getElementById(activeTab).style.display = 'block';
         }
 
-        function editFarmer(id, username, gender) {
-            document.getElementById('farmer-id').value = id;
-            document.getElementById('username').value = username;
-            document.getElementById('password').value = ''; // Clear password field
-            document.getElementById('gender').value = gender;
-            document.querySelector('button[name="add_farmer"]').style.display = 'none';
-            document.querySelector('button[name="update_farmer"]').style.display = 'inline-block';
-        }
+        function editFarmer(id, username, password, gender) {
+    document.getElementById('farmer-id').value = id;
+    document.getElementById('username').value = username;
+    document.getElementById('password').value = password; // Show password in asterisk form
+    document.getElementById('gender').value = gender;
+    document.querySelector('button[name="add_farmer"]').style.display = 'none';
+    document.querySelector('button[name="update_farmer"]').style.display = 'inline-block';
+}
+        function showAddConfirmation() {
+    document.getElementById('add-confirmation-modal').style.display = 'block';
+}
+
+function closeAddConfirmation() {
+    document.getElementById('add-confirmation-modal').style.display = 'none';
+}
+
+function confirmAdd() {
+    document.getElementById('manage-farmers-form').submit();
+}
+
+function showUpdateConfirmation() {
+    document.getElementById('update-confirmation-modal').style.display = 'block';
+}
+
+function closeUpdateConfirmation() {
+    document.getElementById('update-confirmation-modal').style.display = 'none';
+}
+
+function confirmUpdate() {
+    document.getElementById('manage-farmers-form').submit();
+}
+
+function showDeleteConfirmation(id) {
+    document.getElementById('delete-farmer-id').value = id;
+    document.getElementById('delete-confirmation-modal').style.display = 'block';
+}
+
+function closeDeleteConfirmation() {
+    document.getElementById('delete-confirmation-modal').style.display = 'none';
+}
     </script>
 </body>
 </html>
