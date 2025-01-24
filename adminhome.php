@@ -80,19 +80,30 @@ if ($selected_farmer) {
     }
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (isset($_POST['id']) && !empty($_POST['id'])) {
-        // Update farmer
+// Handle form submission for adding/updating farmers
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['form_type']) && $_POST['form_type'] == 'manage_farmers') {
+    if (isset($_POST['username']) && isset($_POST['password'])) {
         $id = $_POST['id'];
         $username = $_POST['username'];
         $password = $_POST['password'];
         $gender = $_POST['gender'];
 
-        $sql = "UPDATE user SET username='$username', password='$password', gender='$gender' WHERE id='$id'";
-        if ($conn->query($sql) === TRUE) {
-            $_SESSION['success'] = "Farmer updated successfully.";
+        if (empty($id)) {
+            // Add new farmer
+            $sql = "INSERT INTO user (username, password, role, gender) VALUES ('$username', '$password', 1, '$gender')";
+            if ($conn->query($sql) === TRUE) {
+                $_SESSION['success'] = "Farmer added successfully.";
+            } else {
+                $_SESSION['error'] = "Error adding farmer: " . $conn->error;
+            }
         } else {
-            $_SESSION['error'] = "Error updating farmer: " . $conn->error;
+            // Update existing farmer
+            $sql = "UPDATE user SET username='$username', password='$password', gender='$gender' WHERE id='$id'";
+            if ($conn->query($sql) === TRUE) {
+                $_SESSION['success'] = "Farmer updated successfully.";
+            } else {
+                $_SESSION['error'] = "Error updating farmer: " . $conn->error;
+            }
         }
     } elseif (isset($_POST['delete_id']) && !empty($_POST['delete_id'])) {
         // Delete farmer
@@ -104,21 +115,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } else {
             $_SESSION['error'] = "Error deleting farmer: " . $conn->error;
         }
-    } else {
-        // Add farmer
-        $username = $_POST['username'];
-        $password = $_POST['password'];
-        $gender = $_POST['gender'];
+    }
+}
 
-        $sql = "INSERT INTO user (username, password, role, gender) VALUES ('$username', '$password', 1, '$gender')";
+// Handle form submission for adding a new seed
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['form_type']) && $_POST['form_type'] == 'add_seed') {
+    if (isset($_POST['seed_name']) && isset($_POST['description']) && isset($_POST['availability'])) {
+        $seed_name = $_POST['seed_name'];
+        $description = $_POST['description'];
+        $availability = $_POST['availability'];
+
+        $sql = "INSERT INTO seeds (seed_name, description, availability) VALUES ('$seed_name', '$description', '$availability')";
         if ($conn->query($sql) === TRUE) {
-            $_SESSION['success'] = "Farmer added successfully.";
+            $_SESSION['success'] = "Seed added successfully.";
         } else {
-            $_SESSION['error'] = "Error adding farmer: " . $conn->error;
+            $_SESSION['error'] = "Error adding seed: " . $conn->error;
         }
     }
-    header('Location: adminhome.php?tab=manage-farmer');
-    exit();
 }
 
 // Fetch all farmers for manage users section
@@ -207,6 +220,7 @@ body  {
             </div>
             <div id="items-list" class="content-section" style="display:none;">
                 <h2>Variety of Seeds</h2>
+                <button class="btn add-seed-btn" onclick="showAddSeedModal()">Add new seed</button>
                 <table class="seeds-table">
                     <thead>
                         <tr>
@@ -417,6 +431,31 @@ body  {
             </form>
         </div>
     </div>
+
+    <!-- Add Seed Modal -->
+    <div id="add-seed-modal" class="modal">
+        <div class="modal-content">
+            <h2>Add New Seed</h2>
+            <form id="add-seed-form" method="post" action="adminhome.php">
+                <input type="hidden" name="form_type" value="add_seed">
+                <div class="form-group">
+                    <label for="seed_name">Seed Name:</label>
+                    <input type="text" id="seed_name" name="seed_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description:</label>
+                    <textarea id="description" name="description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="availability">Availability:</label>
+                    <input type="text" id="availability" name="availability" required>
+                </div>
+                <button type="submit" class="btn confirm-btn">Add Seed</button>
+                <button type="button" class="btn cancel-btn" onclick="closeAddSeedModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

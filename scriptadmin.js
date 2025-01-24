@@ -158,6 +158,14 @@ function closeDeleteConfirmation() {
 document.getElementById('delete-confirmation-modal').style.display = 'none';
 }
 
+function showAddSeedModal() {
+    document.getElementById('add-seed-modal').style.display = 'block';
+}
+
+function closeAddSeedModal() {
+    document.getElementById('add-seed-modal').style.display = 'none';
+}
+
 function toggleSidePanel() {
 const sidePanel = document.querySelector('.side-panel');
 if (sidePanel.classList.contains('visible')) {
