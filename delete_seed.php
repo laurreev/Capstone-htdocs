@@ -1,35 +1,39 @@
 <?php
 session_start();
+include 'db_connection.php';
 
-if (!isset($_SESSION['username'])) {
-    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-    exit();
-}
+header('Content-Type: application/json');
 
-// Database connection
-$servername = "localhost";
-$db_username = "root";
-$db_password = "";
-$dbname = "capstone"; // Replace with your database name
+$response = array('success' => false);
 
-$conn = new mysqli($servername, $db_username, $db_password, $dbname);
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $seed_id = $_POST['seed_id'];
 
-if ($conn->connect_error) {
-    echo json_encode(['success' => false, 'message' => 'Database connection failed']);
-    exit();
-}
+    // Fetch the seed's image
+    $sql = "SELECT image FROM seeds WHERE id='$seed_id'";
+    $result = $conn->query($sql);
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $image = $row['image'];
 
-$data = json_decode(file_get_contents('php://input'), true);
-$seedId = $data['seed_id'];
+        // Delete the seed's image if it exists
+        if (!empty($image) && file_exists(__DIR__ . '/uploads/' . $image)) {
+            unlink(__DIR__ . '/uploads/' . $image);
+        }
+    }
 
-$sql = "DELETE FROM seeds WHERE id = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param('i', $seedId);
-if ($stmt->execute()) {
-    echo json_encode(['success' => true, 'message' => 'Seed deleted successfully']);
+    // Delete the seed from the database
+    $sql = "DELETE FROM seeds WHERE id='$seed_id'";
+    if ($conn->query($sql) === TRUE) {
+        $response['success'] = true;
+        $response['message'] = "Seed deleted successfully.";
+    } else {
+        $response['message'] = "Error deleting seed: " . $conn->error;
+    }
 } else {
-    echo json_encode(['success' => false, 'message' => 'Failed to delete seed']);
+    $response['message'] = "Invalid request method";
 }
-$stmt->close();
+
 $conn->close();
+echo json_encode($response);
 ?>

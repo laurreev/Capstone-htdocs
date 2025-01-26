@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById(contentId).style.display = 'block';
             history.pushState(null, '', `?tab=${contentId}`);
             localStorage.setItem('activeTab', contentId);
+            hideSidePanel();
         });
     });
 
@@ -32,6 +33,10 @@ function toggleSidePanel() {
     } else {
         sidePanel.classList.add('visible');
     }
+}
+function hideSidePanel() {
+    const sidePanel = document.querySelector('.side-panel');
+    sidePanel.classList.remove('visible');
 }
 
 // Initialize FullCalendar
