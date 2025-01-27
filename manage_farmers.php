@@ -6,17 +6,7 @@ if (!isset($_SESSION['username'])) {
     exit();
 }
 
-// Database connection
-$servername = "localhost";
-$db_username = "root";
-$db_password = "";
-$dbname = "capstone"; // Replace with your database name
-
-$conn = new mysqli($servername, $db_username, $db_password, $dbname);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+include 'db_connection.php';
 
 // Handle add farmer
 if (isset($_POST['add_farmer'])) {
@@ -24,12 +14,20 @@ if (isset($_POST['add_farmer'])) {
     $password = $_POST['password'];
     $gender = $_POST['gender'];
 
-    $sql = "INSERT INTO user (username, password, role, gender) VALUES ('$username', '$password', 1, '$gender')";
-    if ($conn->query($sql) === TRUE) {
+    // Hash the password
+    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+    $sql = "INSERT INTO user (username, password, role, gender) VALUES (?, ?, 1, ?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("sss", $username, $hashedPassword, $gender);
+
+    if ($stmt->execute()) {
         $_SESSION['success'] = "Farmer added successfully.";
     } else {
-        $_SESSION['error'] = "Error adding farmer: " . $conn->error;
+        $_SESSION['error'] = "Error adding farmer: " . $stmt->error;
     }
+
+    $stmt->close();
 }
 
 // Handle update farmer
@@ -37,13 +35,27 @@ if (isset($_POST['update_farmer'])) {
     $id = $_POST['id'];
     $username = $_POST['username'];
     $gender = $_POST['gender'];
+    $password = $_POST['password'];
 
-    $sql = "UPDATE user SET username='$username', gender='$gender' WHERE id='$id'";
-    if ($conn->query($sql) === TRUE) {
+    if (!empty($password)) {
+        // Hash the new password
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        $sql = "UPDATE user SET username = ?, password = ?, gender = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sssi", $username, $hashedPassword, $gender, $id);
+    } else {
+        $sql = "UPDATE user SET username = ?, gender = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ssi", $username, $gender, $id);
+    }
+
+    if ($stmt->execute()) {
         $_SESSION['success'] = "Farmer updated successfully.";
     } else {
-        $_SESSION['error'] = "Error updating farmer: " . $conn->error;
+        $_SESSION['error'] = "Error updating farmer: " . $stmt->error;
     }
+
+    $stmt->close();
 }
 
 // Handle delete farmer

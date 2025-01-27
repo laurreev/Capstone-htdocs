@@ -4,16 +4,6 @@ include 'db_connection.php';
 
 header('Content-Type: application/json');
 
-$db_password = "";
-$dbname = "capstone"; // Replace with your database name
-
-$conn = new mysqli($servername, $db_username, $db_password, $dbname);
-
-if ($conn->connect_error) {
-    echo json_encode(['success' => false, 'message' => 'Database connection failed']);
-    exit();
-}
-
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $seedId = $_POST['seed_id'];
     $image = $_FILES['image']['tmp_name'];
@@ -56,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         $stmt->close();
     } else {
-        echo json_encode(['success' => false, 'message' => 'Failed to move uploaded file']);
+        echo json_encode(['success' => false, 'message' => 'Select image first.']);
     }
 }
 

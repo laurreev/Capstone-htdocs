@@ -6,18 +6,7 @@ if (!isset($_SESSION['username'])) {
     exit();
 }
 
-// Database connection
-$servername = "localhost";
-$db_username = "root";
-$db_password = "";
-$dbname = "capstone"; // Replace with your database name
-
-$conn = new mysqli($servername, $db_username, $db_password, $dbname);
-
-if ($conn->connect_error) {
-    echo json_encode(['success' => false, 'message' => 'Database connection failed']);
-    exit();
-}
+include 'db_connection.php';
 
 $data = json_decode(file_get_contents('php://input'), true);
 $seedId = $data['seed_id'];

@@ -6,17 +6,7 @@ if (!isset($_SESSION['username'])) {
     exit();
 }
 
-// Database connection
-$servername = "localhost";
-$db_username = "root";
-$db_password = "";
-$dbname = "capstone"; // Replace with your database name
-
-$conn = new mysqli($servername, $db_username, $db_password, $dbname);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+include 'db_connection.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $recipient = $_POST['recipient'];

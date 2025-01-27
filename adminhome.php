@@ -12,17 +12,7 @@ if (isset($_POST['logout'])) {
     exit();
 }
 
-// Database connection
-$servername = "localhost";
-$db_username = "root";
-$db_password = "";
-$dbname = "capstone"; // Replace with your database name
-
-$conn = new mysqli($servername, $db_username, $db_password, $dbname);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+include 'db_connection.php';
 
 // Fetch seeds from the database
 $seeds = [];
@@ -108,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } else {
             $_SESSION['error'] = "All fields are required.";
         }
-        header('Location: adminhome.php?tab=items-list');
+        header('Location: adminhome.php?tab=manage-farmer');
         exit();
     } elseif (isset($_POST['id']) && !empty($_POST['id'])) {
         // Handle updating a farmer
@@ -118,38 +108,61 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         if (isset($_POST['password']) && $_POST['password'] !== '*****') {
             $password = $_POST['password'];
-            $sql = "UPDATE user SET username = '$username', password = '$password', gender = '$gender' WHERE id = $id";
+            // Hash the new password
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $sql = "UPDATE user SET username = ?, password = ?, gender = ? WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("sssi", $username, $hashedPassword, $gender, $id);
         } else {
-            $sql = "UPDATE user SET username = '$username', gender = '$gender' WHERE id = $id";
+            $sql = "UPDATE user SET username = ?, gender = ? WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ssi", $username, $gender, $id);
         }
-
-        if ($conn->query($sql) === TRUE) {
+        
+        if ($stmt->execute()) {
             $_SESSION['success'] = "Farmer updated successfully.";
         } else {
-            $_SESSION['error'] = "Error updating farmer: " . $conn->error;
+            $_SESSION['error'] = "Error updating farmer: " . $stmt->error;
         }
-    } elseif (isset($_POST['delete_id']) && !empty($_POST['delete_id'])) {
-        // Handle deleting a farmer
-        $id = $_POST['delete_id'];
-
-        $sql = "DELETE FROM user WHERE id='$id'";
-        if ($conn->query($sql) === TRUE) {
-            $_SESSION['success'] = "Farmer deleted successfully.";
+        
+        $stmt->close();
+        header('Location: adminhome.php?tab=items-list');
+        exit();
+        } elseif (isset($_POST['delete_id']) && !empty($_POST['delete_id'])) {
+            // Handle deleting a farmer
+            $id = $_POST['delete_id'];
+        
+            $sql = "DELETE FROM user WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("i", $id);
+        
+            if ($stmt->execute()) {
+                $_SESSION['success'] = "Farmer deleted successfully.";
+            } else {
+                $_SESSION['error'] = "Error deleting farmer: " . $stmt->error;
+            }
+        
+            $stmt->close();
+            header('Location: adminhome.php?tab=manage-farmer');
+            exit();
         } else {
-            $_SESSION['error'] = "Error deleting farmer: " . $conn->error;
-        }
-    } else {
-        // Handle adding a farmer
-        $username = $_POST['username'];
-        $password = $_POST['password'];
-        $gender = $_POST['gender'];
-
-        $sql = "INSERT INTO user (username, password, role, gender) VALUES ('$username', '$password', 1, '$gender')";
-        if ($conn->query($sql) === TRUE) {
-            $_SESSION['success'] = "Farmer added successfully.";
-        } else {
-            $_SESSION['error'] = "Error adding farmer: " . $conn->error;
-        }
+            // Handle adding a farmer
+            $username = $_POST['username'];
+            $password = $_POST['password'];
+            $gender = $_POST['gender'];
+        
+            // Hash the password
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        
+            $sql = "INSERT INTO user (username, password, role, gender) VALUES (?, ?, 1, ?)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("sss", $username, $hashedPassword, $gender);
+        
+            if ($stmt->execute()) {
+                $_SESSION['success'] = "Farmer added successfully.";
+            } else {
+                $_SESSION['error'] = "Error adding farmer: " . $stmt->error;
+            }
     }
     header('Location: adminhome.php?tab=manage-farmer');
     exit();
@@ -225,7 +238,7 @@ body  {
                 <li><a href="#" data-content="manage-farmer">Manage Farmers</a></li>
             </ul>
         </div>
-        <div class="main-content">
+        <di class="main-content">
             <div id="alert" class="alert" style="display:none;"></div>
             <h1 id="greeting"></h1>
             <?php if (isset($_SESSION['success'])): ?>
@@ -286,7 +299,7 @@ body  {
                             <td>
                                 <?php if (!empty($seed['image'])): ?>
                                     <button class="btn edit-btn" onclick="updateImage(<?php echo $seed['id']; ?>)">Update Image</button>
-                                    <button class="btn delete-btn" onclick="showDeleteConfirmation(<?php echo $seed['id']; ?>)">Delete Image</button>
+                                    <button class="btn delete-btn" onclick="showDeleteImageConfirmation(<?php echo $seed['id']; ?>)">Delete Image</button>
                                 <?php else: ?>
                                     <form class="upload-image-form" enctype="multipart/form-data">
                                         <input type="file" name="image" required>
@@ -369,42 +382,52 @@ body  {
     </div>
 </div>
                 
-<div id="messages" class="content-section" style="display:none;"> <!-- Updated tab id -->
-    <h2>Messages</h2> <!-- Updated heading -->
+<div id="messages" class="content-section" style="display:none;">
+    <h2>Messages</h2>
     <div class="messages-container">
-        <div class="message-box"> <!-- Updated class name -->
+        <div class="message-box" style="width: 70%;"> <!-- Updated width -->
             <h3 class="h3label">Farmers with Messages</h3>
             <ul class="farmer-list">
                 <?php foreach ($farmers as $farmer): ?>
-                    <li><a href="#" data-farmer="<?php echo htmlspecialchars($farmer); ?>"><?php echo htmlspecialchars($farmer); ?></a></li>
+                    <li><a href="#" data-farmer="<?php echo htmlspecialchars($farmer); ?>" onclick="openConversation('<?php echo htmlspecialchars($farmer); ?>')"><?php echo htmlspecialchars($farmer); ?></a></li>
                 <?php endforeach; ?>
             </ul>
             <button class="btn back-btn" onclick="showFarmersList()" style="display:none;">Back to messages</button>
-            <button class="btn ref-btn" onclick="refreshMessages()" style="display:none";>Refresh Messages</button>
+            <button class="btn ref-btn" onclick="refreshMessages()" style="display:none;">Refresh Messages</button>
         </div>
-        <div class="conversation-box" style="display:none;">
-            <h3>Conversation with <span id="conversation-farmer"></span></h3>
-            <div class="chat-container">
-                <?php if (!empty($messages)): ?>
-                    <?php foreach ($messages as $message): ?>
-                        <div class="chat-message <?php echo $message['username'] == 'admin' ? 'admin' : 'farmer'; ?>">
-                            <strong><?php echo htmlspecialchars($message['username']); ?>:</strong>
-                            <?php echo htmlspecialchars($message['message']); ?>
-                            <em>(<?php echo $message['created_at']; ?>)</em>
-                        </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <p>No messages from this farmer.</p>
-                <?php endif; ?>
-            </div>
-            <form id="reply-form" method="post" action="send_message.php">
-    <input type="hidden" name="recipient" id="recipient" value="<?php echo htmlspecialchars($selected_farmer); ?>">
-    <textarea name="message" rows="4" placeholder="Type your message here..." required></textarea>
-    <button type="submit" class="btn send-message-btn" id="send-message-btn">Send Message</button>
-</form>
+        <div class="find-farmers-box" style="width: 30%;"> <!-- New container -->
+            <h3 class="h3label">Find Farmers</h3>
+            <input type="text" id="search-farmer" placeholder="Search for a farmer...">
+            <button class="btn search-btn" onclick="searchFarmer()">Search</button>
+            <ul id="all-farmer-list" class="scrollable-list">
+                <!-- Farmer list will be populated by JavaScript -->
+            </ul>
+        </div>
+    </div>
+    <div class="conversation-box" style="display:none;"> <!-- Moved outside of messages-container -->
+        <h3>Conversation with <span id="conversation-farmer"></span></h3>
+        <div class="chat-container">
+            <?php if (!empty($messages)): ?>
+                <?php foreach ($messages as $message): ?>
+                    <div class="chat-message <?php echo $message['username'] == 'admin' ? 'admin' : 'farmer'; ?>">
+                        <strong><?php echo htmlspecialchars($message['username']); ?>:</strong>
+                        <?php echo htmlspecialchars($message['message']); ?>
+                        <em>(<?php echo $message['created_at']; ?>)</em>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <p>No messages from this farmer.</p>
+            <?php endif; ?>
+        </div>
+        <form id="reply-form" method="post" action="send_message.php">
+            <input type="hidden" name="recipient" id="recipient" value="<?php echo htmlspecialchars($selected_farmer); ?>">
+            <textarea name="message" rows="4" placeholder="Type your message here..." required></textarea>
+            <button type="submit" class="btn send-message-btn" id="send-message-btn">Send Message</button>
+        </form>
         </div>
     </div>
 </div>
+        
 
             <div id="settings" class="content-section" style="display:none;">
                 <h2>Settings</h2>
@@ -421,7 +444,7 @@ body  {
                         <label for="confirm-password">Confirm Password:</label>
                         <input type="password" id="confirm-password" name="confirm-password">
                     </div>
-                    <button type="button" class="btn" onclick="showConfirmation()">Update Settings</button>
+                    <button type="button" class="btn" onclick="showSettingsConfirmation()">Update Settings</button>
                 </form>
             </div>
         </div>
@@ -450,12 +473,15 @@ body  {
 <!-- Delete Confirmation Modal -->
 <div id="delete-confirmation-modal" class="modal">
     <div class="modal-content">
+        <span class="close" onclick="closeDeleteConfirmation()">&times;</span>
         <h2>Confirm Delete</h2>
         <p>Are you sure you want to delete this farmer?</p>
         <form id="delete-form" method="post" action="adminhome.php">
             <input type="hidden" id="delete-farmer-id" name="delete_id">
-            <button type="submit" class="btn confirm-btn">Confirm</button>
-            <button type="button" class="btn cancel-btn" onclick="closeDeleteConfirmation()">Cancel</button>
+            <div class="modal-buttons">
+                <button type="submit" class="btn confirm-btn">Confirm</button>
+                <button type="button" class="btn cancel-btn" onclick="closeDeleteConfirmation()">Cancel</button>
+            </div>
         </form>
     </div>
 </div>
@@ -465,11 +491,11 @@ body  {
         <div class="modal-content">
             <span class="close" onclick="closeUploadSeedModal()">&times;</span>
             <p id="upload-seed-message"></p>
-            <button id="upload-seed-confirm-button" class="btn">Confirm</button>
-            <button class="btn" onclick="closeUploadSeedModal()">Cancel</button>
+            <button id="upload-seed-confirm-button" class="btn upload-seed-confirm-button">Confirm</button>
+            <button class="btn upload-seed-cancel-button" onclick="closeUploadSeedModal()">Cancel</button>
         </div>
     </div>
-<!-- Add/Edit Seed Form Modal -->
+<!-- Add Seed Form Modal -->
 <div id="add-seed-form-modal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeAddSeedFormModal()">&times;</span>
@@ -486,8 +512,11 @@ body  {
                 </select>
                 <label for="image">Image:</label>
                 <input type="file" id="image" name="image">
-                <img id="existing-image" src="" alt="Existing Image" style="display:none; width: 100px; margin-top: 10px;">
-                <button type="button" class="btn" onclick="enableFileInput()">Change Image</button>
+                <div id="image-actions" style="display: flex; align-items: center; gap: 10px;">
+    <img id="existing-image" src="" alt="Existing Image" style="display:none; width: 100px; margin-top: 10px;">
+    <button type="button" class="btn change-image-btn" id="change-image-btn" onclick="enableFileInput()" style="display:none;">Change Image</button>
+    <button type="button" class="btn cancel-change-btn" id="cancel-change-btn" onclick="disableFileInput()" style="display:none;">Cancel Change</button>
+</div>
                 <button type="button" class="btn confirm-btn" onclick="showAddSeedConfirmation()">Submit</button>
             </form>
         </div>

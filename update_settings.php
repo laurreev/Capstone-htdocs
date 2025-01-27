@@ -1,53 +1,45 @@
 <?php
 session_start();
+include 'db_connection.php';
 
-if (!isset($_SESSION['username'])) {
-    header('Location: index.php');
-    exit();
-}
+header('Content-Type: application/json');
 
-// Database connection
-$servername = "localhost";
-$db_username = "root";
-$db_password = "";
-$dbname = "capstone"; // Replace with your database name
+$response = array('success' => false);
 
-$conn = new mysqli($servername, $db_username, $db_password, $dbname);
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+    $confirm_password = $_POST['confirm-password'];
 
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+    if ($password !== $confirm_password) {
+        $response['message'] = 'Passwords do not match.';
+    } else {
+        $hashedPassword = !empty($password) ? password_hash($password, PASSWORD_DEFAULT) : null;
 
-$username = $_POST['username'];
-$password = $_POST['password'];
-$confirm_password = $_POST['confirm-password'];
+        if (!empty($password)) {
+            $sql = "UPDATE user SET username = ?, password = ? WHERE username = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("sss", $username, $hashedPassword, $_SESSION['username']);
+        } else {
+            $sql = "UPDATE user SET username = ? WHERE username = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ss", $username, $_SESSION['username']);
+        }
 
-if ($password !== $confirm_password) {
-    $_SESSION['error'] = "Passwords do not match.";
-    header('Location: ' . ($_SESSION['role'] == 0 ? 'adminhome.php' : 'farmerhome.php') . '?tab=settings');
-    exit();
-}
+        if ($stmt->execute()) {
+            $_SESSION['username'] = $username;
+            $response['success'] = true;
+            $response['message'] = 'Settings updated successfully.';
+        } else {
+            $response['message'] = 'Error updating settings: ' . $stmt->error;
+        }
 
-if (!empty($password)) {
-    $sql = "UPDATE user SET username = ?, password = ? WHERE username = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sss", $username, $password, $_SESSION['username']);
+        $stmt->close();
+    }
 } else {
-    $sql = "UPDATE user SET username = ? WHERE username = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ss", $username, $_SESSION['username']);
+    $response['message'] = 'Invalid request method.';
 }
 
-if ($stmt->execute()) {
-    $_SESSION['username'] = $username;
-    $_SESSION['success'] = "Settings updated successfully.";
-} else {
-    $_SESSION['error'] = "Error updating settings.";
-}
-
-$stmt->close();
 $conn->close();
-
-header('Location: ' . ($_SESSION['role'] == 0 ? 'adminhome.php' : 'farmerhome.php') . '?tab=settings');
-exit();
+echo json_encode($response);
 ?>

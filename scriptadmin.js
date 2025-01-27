@@ -28,6 +28,20 @@ section.style.display = 'none';
 document.getElementById(activeTab).style.display = 'block';
 }
 
+function showSettingsConfirmation() {
+    const modal = document.getElementById('confirmation-modal');
+    const confirmationMessage = document.getElementById('confirmation-message');
+    confirmationMessage.textContent = 'Are you sure you want to update the settings?';
+    const confirmButton = document.getElementById('confirm-button');
+
+    confirmButton.onclick = function() {
+        updateSettings();
+        closeConfirmationModal();
+    };
+
+    modal.style.display = 'block';
+}
+
 function showConfirmation() {
     document.getElementById('confirmation-modal').style.display = 'block';
 }
@@ -36,8 +50,26 @@ function closeConfirmation() {
     document.getElementById('confirmation-modal').style.display = 'none';
 }
 
-function confirmUpdateSettings() {
-    document.getElementById('settings-form').submit();
+function updateSettings() {
+    const form = document.getElementById('settings-form');
+    const formData = new FormData(form);
+
+    fetch('update_settings.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Settings updated successfully.', 'success');
+        } else {
+            showErrorAlert(data.message || 'Settings update failed.');
+        }
+    })
+    .catch(error => {
+        console.error('Error updating settings:', error);
+        showErrorAlert('An error occurred while updating the settings.');
+    });
 }
 
 function showLogoutConfirmation() {
@@ -161,6 +193,16 @@ function uploadImage(seedId, input) {
     });
 }
 
+function resetSeedForm() {
+    const form = document.getElementById('add-seed-form');
+    form.reset(); // Reset the form fields
+    document.getElementById('seed_id').value = ''; // Clear the seed ID
+    document.getElementById('existing-image').style.display = 'none'; // Hide the existing image
+    document.getElementById('image').disabled = false; // Enable the file input
+    document.getElementById('change-image-btn').style.display = 'none'; // Hide the change image button
+    document.getElementById('cancel-change-btn').style.display = 'none'; // Hide the cancel change button
+}
+
 function editSeed(seedId) {
     const newAvailability = prompt('Enter new availability (Active/Inactive):');
     if (newAvailability !== null && (newAvailability.toLowerCase() === 'active' || newAvailability.toLowerCase() === 'inactive')) {
@@ -254,7 +296,7 @@ function closeUploadSeedModal() {
     modal.style.display = 'none';
 }
 
-function showDeleteConfirmation(seedId) {
+function showDeleteImageConfirmation(seedId) {
     const modal = document.getElementById('confirmation-modal');
     const message = document.getElementById('confirmation-message');
     const confirmButton = document.getElementById('confirm-button');
@@ -434,10 +476,8 @@ function addSeed() {
 }
 
 function showAddSeedForm() {
+    resetSeedForm(); // Reset the form fields
     const modal = document.getElementById('add-seed-form-modal');
-    const form = document.getElementById('add-seed-form');
-    form.reset(); // Reset the form fields
-    document.getElementById('seed_id').value = ''; // Clear the seed ID
     modal.style.display = 'block';
 }
 
@@ -459,9 +499,13 @@ function showEditSeedForm(seedId) {
                     document.getElementById('existing-image').src = `uploads/${data.seed.image}`;
                     document.getElementById('existing-image').style.display = 'block';
                     document.getElementById('image').disabled = true; // Disable the file input
+                    document.getElementById('change-image-btn').style.display = 'block'; // Show the change image button
+                    document.getElementById('cancel-change-btn').style.display = 'none'; // Hide the cancel change button
                 } else {
                     document.getElementById('existing-image').style.display = 'none';
                     document.getElementById('image').disabled = false; // Enable the file input
+                    document.getElementById('change-image-btn').style.display = 'none'; // Hide the change image button
+                    document.getElementById('cancel-change-btn').style.display = 'none'; // Hide the cancel change button
                 }
             } else {
                 showErrorAlert(data.message || 'Failed to fetch seed details.');
@@ -477,6 +521,14 @@ function showEditSeedForm(seedId) {
 
 function enableFileInput() {
     document.getElementById('image').disabled = false;
+    document.getElementById('change-image-btn').style.display = 'none'; // Hide the change image button
+    document.getElementById('cancel-change-btn').style.display = 'block'; // Show the cancel change button
+}
+
+function disableFileInput() {
+    document.getElementById('image').disabled = true;
+    document.getElementById('change-image-btn').style.display = 'block'; // Show the change image button
+    document.getElementById('cancel-change-btn').style.display = 'none'; // Hide the cancel change button
 }
 
 function closeAddSeedFormModal() {

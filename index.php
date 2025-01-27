@@ -1,17 +1,7 @@
 <?php
 session_start();
 
-// Database connection
-$servername = "localhost";
-$db_username = "root";
-$db_password = "";
-$dbname = "capstone"; // Replace with your database name
-
-$conn = new mysqli($servername, $db_username, $db_password, $dbname);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+include 'db_connection.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = $_POST['username'];
@@ -25,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt->bind_result($stored_password, $role);
     $stmt->fetch();
 
-    if ($stmt->num_rows > 0 && $password === $stored_password) {
+    if ($stmt->num_rows > 0 && password_verify($password, $stored_password)) {
         $_SESSION['username'] = $username;
         $_SESSION['role'] = $role;
 
@@ -41,7 +31,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $stmt->close();
 }
-
 $conn->close();
 ?>
 

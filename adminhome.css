@@ -210,6 +210,18 @@ body {
     margin-top: 20px;
 }
 
+.chat-container h3 {
+    margin-top: 0;
+}
+
+#chat-messages {
+    height: 300px;
+    overflow-y: scroll;
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
 .chat-box {
     margin-bottom: 20px;
 }
@@ -426,8 +438,58 @@ body {
     background-color: #e53935;
 }
 
+.messages-container {
+    display: flex;
+}
+
+.message-box {
+    width: 70%;
+    padding: 10px;
+    border-right: 1px solid #ccc;
+}
+
+.find-farmers-box {
+    width: 30%;
+    padding: 10px;
+}
+
+.find-farmers-box input {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.find-farmers-box .search-btn {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.scrollable-list {
+    list-style-type: none;
+    padding: 0;
+    max-height: 300px;
+    overflow-y: scroll;
+}
+
+.scrollable-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+}
+
+.scrollable-list .message-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
 /* Messages and Manage Users container styles */
-.messages-container, .manage-users-container {
+.manage-users-container {
     background: #fff;
     padding: 20px;
     border-radius: 10px;
@@ -442,6 +504,9 @@ body {
     cursor: pointer;
     border-radius: 10px;
     font-size: 16px;
+}
+.ref-btn:hover {
+    background-color: #347938;
 }
 
 .btn.send-message-btn {
@@ -774,5 +839,24 @@ body {
 }
 
 .btn.cancel-btn:hover {
+    background-color: #d32f2f;
+}
+
+/* Upload Image Confirmation Button */
+.btn.upload-seed-confirm-button {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.btn.upload-seed-confirm-button:hover {
+    background-color: #347938;
+}
+
+.btn.upload-seed-cancel-button {
+    background-color: #f44336;
+    color: white;
+}
+
+.btn.upload-seed-cancel-button:hover {
     background-color: #d32f2f;
 }
